@@ -18,9 +18,12 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     uint256 private soulboundCount;
     uint256 private constant TICKET_AMOUNT = 1 ether;
     address[] private _whiteListedAddresses;
+    uint256 private ticketCount = totalSupply() + 1;
+
     mapping (address => bool) private whiteListed;
 
     event TicketBought(address indexed buyersAddress, uint256 indexed ticketId);
+    event soulboundTicket(address indexed buyersAddress, uint256 indexed ticketId);
     event addressWhiteListed(address[] indexed allListedAddress);
 
     constructor(uint256 _startTime) ERC721("DrakeConcertContract", "$DCC") {
@@ -31,7 +34,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     function buyTicket() external payable{
         if(msg.sender == address(0)) revert DrakeConcertContract_addrCannotBeZeroAddress(); 
         if(msg.value != TICKET_AMOUNT) revert DrakeConcertContract_inAccuratePrice();
-        if(block.timestamp > endTime) revert DrakeConcertContract_saleHasNotStarted();
+        if(block.timestamp >= endTime) revert DrakeConcertContract_saleHasNotStarted();
         if(totalSupply() == MAX_TICKET_SALE) revert DrakeConcertContract_salesHasEnded();
 
         if(preSaleCount < PRESALE_MAX){
@@ -41,10 +44,11 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
 
         if(soulboundCount < SOULBOUND_MAX && totalSupply() <= SOULBOUND_MAX){
             soulboundCount++;
-            emit TicketBought(msg.sender, totalSupply());
-            return _safeMint(msg.sender, totalSupply() + 1);
+            emit soulboundTicket(msg.sender, ticketCount);
+            return _safeMint(msg.sender, ticketCount);
         }
-        _safeMint(msg.sender, totalSupply() + 1);
+        _safeMint(msg.sender, ticketCount);
+        emit TicketBought(msg.sender, ticketCount);
     }
 
     function whiteListAddress(address[] memory addresses) external onlyOwner{
@@ -59,5 +63,10 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
 
     function getWhiteListedAddress() external view onlyOwner returns(address[] memory) {
         return _whiteListedAddresses;
+    }
+
+
+    function getEndTime() external view returns(uint256) {
+        return endTime;
     }
 }
