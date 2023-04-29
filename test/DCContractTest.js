@@ -17,7 +17,7 @@ describe("", () => {
     console.log(parseInt(END_DATE));
   });
 
-  describe("Buy Ticket", () => {
+  describe("Buy Ticket with a single address", () => {
     beforeEach(async () => {
       await DCContract.whiteListAddress([
         deployer.address,
@@ -27,7 +27,7 @@ describe("", () => {
       console.log("white listed addresses:", whiteListedAddresses);
     });
 
-    it.only("should pass if TICKET_AMOUNT is accurate & emit the address that purchased", async () => {
+    it("should pass if TICKET_AMOUNT is accurate & emit the address that purchased", async () => {
       const txBuyTicket = await DCContract.buyTicket({ value: accurateValue });
       const txBuyTicketReceipt = await txBuyTicket.wait(1);
       const { buyersAddress, ticketId } = txBuyTicketReceipt.events[0].args;
@@ -51,6 +51,40 @@ describe("", () => {
           value: accurateValue,
         })
       ).to.be.revertedWith("DrakeConcertContract_saleHasNotStarted");
+    });
+  });
+
+  describe("Buy Ticket with a multiple address", () => {
+    it("should allow address get Ticket in general sale after pre-sale is completed", async () => {
+      const numberOfAddresses = 5;
+      const startingIndex = 1;
+      for (let i = startingIndex; i <= numberOfAddresses; i++) {
+        await DCContract.whiteListAddress([accounts[i].address]);
+
+        const DDContractWConnectedAccounts = await DCContract.connect(
+          accounts[i]
+        );
+
+        await DDContractWConnectedAccounts.buyTicket({
+          value: accurateValue,
+        });
+        console.log("Address", DDContractWConnectedAccounts.address);
+      }
+
+      const whiteListedAddresses = await DCContract.getWhiteListedAddress();
+      console.log("white listed addresses:", whiteListedAddresses);
+
+      /// Buying Ticket after the pre-sale
+      const anotherUser = accounts[9];
+      const connectedAnotherUserWDDContract = await DCContract.connect(
+        anotherUser
+      );
+
+      const anotherUserTx = await connectedAnotherUserWDDContract.buyTicket({
+        value: accurateValue,
+      });
+
+      await expect(anotherUserTx).to.emit(DCContract, "TicketBought");
     });
   });
 });
