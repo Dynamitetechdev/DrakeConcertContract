@@ -1,4 +1,4 @@
-const { expect } = require("chai");
+const { expect, assert } = require("chai");
 const { deployments, ethers, network } = require("hardhat");
 
 describe("", () => {
@@ -85,6 +85,92 @@ describe("", () => {
       });
 
       await expect(anotherUserTx).to.emit(DCContract, "TicketBought");
+    });
+  });
+
+  describe("Remove Addresses from been whitelisted", () => {
+    it("remove addresses from been whiteListed", async () => {
+      const numberOfAddresses = 5;
+      const startingIndex = 1;
+
+      for (let i = startingIndex; i <= numberOfAddresses; i++) {
+        await DCContract.whiteListAddress([accounts[i].address]);
+      }
+
+      const whiteListedAddressesBeforeRemoval =
+        await DCContract.getWhiteListedAddress();
+      console.log(
+        "white listed addresses before removal:",
+        whiteListedAddressesBeforeRemoval
+      );
+
+      await DCContract.removeWhiteListedAddress([
+        accounts[4].address,
+        accounts[3].address,
+      ]);
+
+      const whiteListedAddressesAfterRemoval =
+        await DCContract.getWhiteListedAddress();
+      console.log(
+        "white listed addresses after removal:",
+        whiteListedAddressesAfterRemoval
+      );
+    });
+    it("Should return false if address is not listed", async () => {
+      const res = await DCContract.isWhiteListed(accounts[3].address);
+      assert(!res);
+    });
+  });
+
+  describe("Kill Contract and transfer remaining balance to the contract owner", () => {
+    beforeEach(async () => {
+      const numberOfAddresses = 5;
+      const startingIndex = 1;
+      for (let i = startingIndex; i <= numberOfAddresses; i++) {
+        await DCContract.whiteListAddress([accounts[i].address]);
+
+        const DDContractWConnectedAccounts = await DCContract.connect(
+          accounts[i]
+        );
+
+        await DDContractWConnectedAccounts.buyTicket({
+          value: accurateValue,
+        });
+        console.log("Address", DDContractWConnectedAccounts.address);
+      }
+    });
+
+    it.only("Should Kill Contract since the 10 days has elasped and all ticket has been sold", async () => {
+      await network.provider.request({
+        method: "evm_increaseTime",
+        params: [parseInt(END_DATE) + 1],
+      });
+
+      await network.provider.request({ method: "evm_mine", params: [] });
+
+      const contractBalanceBeforeKill = await ethers.provider.getBalance(
+        DCContract.address
+      );
+
+      console.log(
+        "contractBalanceBeforeKill",
+        ethers.utils.formatEther(contractBalanceBeforeKill)
+      );
+      await DCContract.killContract();
+
+      const contractBalanceAfterKill = await ethers.provider.getBalance(
+        DCContract.address
+      );
+
+      console.log(
+        "contractBalanceAfterKill",
+        ethers.utils.formatEther(contractBalanceAfterKill)
+      );
+      /// Buying Ticket after the pre-sale
+      const anotherUser = accounts[9];
+      const connectedAnotherUserWDDContract = await DCContract.connect(
+        anotherUser
+      );
     });
   });
 });
