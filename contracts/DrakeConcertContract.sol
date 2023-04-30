@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.8.18;
+
+/// @title A Contract To Purchase Ticket For Drake's Event
+/// @author Dynamite
+
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -10,31 +14,40 @@ error DrakeConcertContract_notWhiteListed();
 error DrakeConcertContract_salesHasEnded();
 error DrakeConcertContract_WhiteListMax();
 error DrakeConcertContract_saleHasNotEnded();
+error DrakeConcertContract_AlreadyWhiteListed();
 
 contract DrakeConcertContract is ERC721Enumerable, Ownable{
 
+    // ======= STATE VARIABLES ========//
     uint256 private startTime;
     uint256 private endTime;
-    uint256 private constant MAX_TICKET_SALE = 10;
-    uint256 private constant PRESALE_MAX = 5;
-    uint256 private preSaleCount;
-    uint256 private constant SOULBOUND_MAX= 3;
-    uint256 private soulboundCount;
+    uint32 private constant MAX_TICKET_SALE = 1000;
+    uint16 private constant PRESALE_MAX = 200;
+    uint32 private preSaleCount;
+    uint16 private constant SOULBOUND_MAX= 20;
+    uint16 private soulboundCount;
     uint256 private constant TICKET_AMOUNT = 1 ether;
     address[] private _whiteListedAddresses;
-    uint256 private ticketCount = totalSupply() + 1;
 
+    // ======= MAPPINGS ========//
     mapping (address => bool) private whiteListed;
 
-    event TicketBought(address indexed buyersAddress, uint256 indexed ticketId);
-    event soulboundTicket(address indexed buyersAddress, uint256 indexed ticketId);
-    event addressWhiteListed(address[] indexed allListedAddress);
 
+    // ======= EVENTS ========//
+    event TicketBought(address indexed buyersAddress, uint256 indexed ticketId);
+    event SoulboundTicket(address indexed buyersAddress, uint256 indexed ticketId);
+
+    /**
+     * @param _startTime set the start time of the ticket sale 
+     */
     constructor(uint256 _startTime) ERC721("DrakeConcertContract", "$DCC") {
          startTime = _startTime;
          endTime = _startTime + 10 days;
     }
 
+    // ======= EXETERNAL FUNCTIONS ========//
+
+    /// @dev This function is used to buy tickets for a Drake concert 
     function buyTicket() external payable{
         if(msg.sender == address(0)) revert DrakeConcertContract_addrCannotBeZeroAddress(); 
         if(msg.value != TICKET_AMOUNT) revert DrakeConcertContract_inAccuratePrice();
@@ -48,23 +61,32 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
 
         if(soulboundCount < SOULBOUND_MAX && totalSupply() <= SOULBOUND_MAX){
             soulboundCount++;
-            emit soulboundTicket(msg.sender, totalSupply() + 1);
+            emit SoulboundTicket(msg.sender, totalSupply() + 1);
             return _safeMint(msg.sender, totalSupply() + 1);
         }
         _safeMint(msg.sender, totalSupply() + 1);
         emit TicketBought(msg.sender, totalSupply() + 1);
     }
 
+    /**
+     * @dev Whitelist Addresses for presale
+     * @param addresses Addresses to be whitelisted for Pre-sale
+     */
     function whiteListAddress(address[] memory addresses) external onlyOwner{
 
         if(_whiteListedAddresses.length >= PRESALE_MAX) revert DrakeConcertContract_WhiteListMax();
 
         for (uint256 i = 0; i < addresses.length; i++) {
+            if(isWhiteListed(addresses[i])) revert DrakeConcertContract_AlreadyWhiteListed();
             whiteListed[addresses[i]] = true;
             _whiteListedAddresses.push(addresses[i]);
         }
     }
 
+    /**
+     * @dev Removes Whitelisted Addresses
+     * @param addresses Addresses to be removed from the whitelist
+     */
     function removeWhiteListedAddress(address[] memory addresses) external onlyOwner{
         for(uint256 i = 0; i < addresses.length; i++){
             if(!whiteListed[addresses[i]]) revert DrakeConcertContract_notWhiteListed();
@@ -80,19 +102,28 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
         }
     }
 
-    function isWhiteListed(address _address) external view returns(bool){
+    /**
+     * @dev checks if an address is whitelisted or not
+     * @param _address address to be checked
+     */
+    function isWhiteListed(address _address) public view returns(bool){
         return whiteListed[_address];
     }
 
+    /// @dev kills the contract purchase are done, and transfer the remaining balance to the contract owner
     function killContract() external onlyOwner {
         if(block.timestamp < endTime && totalSupply() < MAX_TICKET_SALE) revert DrakeConcertContract_saleHasNotEnded();
         selfdestruct(payable(owner()));
     }
 
+    // ======= GETTER FUNCTIONS ========//
+
+    /// @dev returns all whitelisted addresses
     function getWhiteListedAddress() external view onlyOwner returns(address[] memory) {
         return _whiteListedAddresses;
     }
 
+    /// @dev returns the end time of purchase
     function getEndTime() external view returns(uint256) {
         return endTime;
     }
