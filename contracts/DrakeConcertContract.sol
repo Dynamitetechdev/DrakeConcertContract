@@ -6,7 +6,7 @@ pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
+import "./SoulboundToken.sol";
 error DrakeConcertContract_addrCannotBeZeroAddress();
 error DrakeConcertContract_inAccuratePrice();
 error DrakeConcertContract_saleHasNotStarted();
@@ -27,10 +27,12 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     uint16 private constant SOULBOUND_MAX= 20;
     uint16 private soulboundCount;
     uint256 private constant TICKET_AMOUNT = 1 ether;
-    address[] private _whiteListedAddresses;
+    uint8 public whiteListedCounter;
 
+    address private soulboundTicketAddress;
     // ======= MAPPINGS ========//
     mapping (address => bool) private whiteListed;
+    mapping (address => bool) private hasSoulBoundToken;
 
 
     // ======= EVENTS ========//
@@ -40,7 +42,8 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     /**
      * @param _startTime set the start time of the ticket sale 
      */
-    constructor(uint256 _startTime) ERC721("DrakeConcertContract", "$DCC") {
+    constructor(uint256 _startTime, address _soulboundTicketAddress) ERC721("DrakeConcertContract", "$DCC") {
+         soulboundTicketAddress = _soulboundTicketAddress;
          startTime = _startTime;
          endTime = _startTime + 10 days;
     }
@@ -59,11 +62,11 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
             preSaleCount++;
         }
 
-        if(soulboundCount < SOULBOUND_MAX && totalSupply() <= SOULBOUND_MAX){
+        if(soulboundCount < SOULBOUND_MAX && totalSupply() < SOULBOUND_MAX){
             soulboundCount++;
-            emit SoulboundTicket(msg.sender, totalSupply() + 1);
-            return _safeMint(msg.sender, totalSupply() + 1);
+            SoulboundToken(soulboundTicketAddress).safeMint(msg.sender);
         }
+
         _safeMint(msg.sender, totalSupply() + 1);
         emit TicketBought(msg.sender, totalSupply() + 1);
     }
@@ -73,13 +76,14 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
      * @param addresses Addresses to be whitelisted for Pre-sale
      */
     function whiteListAddress(address[] memory addresses) external onlyOwner{
+        uint8 len = uint8(addresses.length);
 
-        if(_whiteListedAddresses.length >= PRESALE_MAX) revert DrakeConcertContract_WhiteListMax();
+        if((whiteListedCounter + len) > PRESALE_MAX) revert();
 
         for (uint256 i = 0; i < addresses.length; i++) {
-            if(isWhiteListed(addresses[i])) revert DrakeConcertContract_AlreadyWhiteListed();
+            if(isWhiteListed(addresses[i])) continue;
             whiteListed[addresses[i]] = true;
-            _whiteListedAddresses.push(addresses[i]);
+            whiteListedCounter++;
         }
     }
 
@@ -87,18 +91,16 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
      * @dev Removes Whitelisted Addresses
      * @param addresses Addresses to be removed from the whitelist
      */
-    function removeWhiteListedAddress(address[] memory addresses) external onlyOwner{
-        for(uint256 i = 0; i < addresses.length; i++){
-            if(!whiteListed[addresses[i]]) revert DrakeConcertContract_notWhiteListed();
-            whiteListed[addresses[i]] = false;
 
-            for(uint256 x = i; x < _whiteListedAddresses.length; x++){
-                if(_whiteListedAddresses[x] == addresses[i]){
-                    _whiteListedAddresses[x] = _whiteListedAddresses[_whiteListedAddresses.length - 1];
-                    _whiteListedAddresses.pop();
-                    break;
-                }
-            }
+    function removeWhiteListedAddress(address[] memory addresses) external onlyOwner{
+        uint8 len = uint8(addresses.length);
+
+        if(len > whiteListedCounter) revert();
+
+        for(uint256 i = 0; i < addresses.length; i++){
+            if(!whiteListed[addresses[i]]) continue;
+            whiteListed[addresses[i]] = false;
+            whiteListedCounter--;
         }
     }
 
@@ -110,21 +112,23 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
         return whiteListed[_address];
     }
 
+    function hasSoulBoundToken
     /// @dev kills the contract purchase are done, and transfer the remaining balance to the contract owner
     function killContract() external onlyOwner {
         if(block.timestamp < endTime && totalSupply() < MAX_TICKET_SALE) revert DrakeConcertContract_saleHasNotEnded();
         selfdestruct(payable(owner()));
     }
 
+    
     // ======= GETTER FUNCTIONS ========//
 
     /// @dev returns all whitelisted addresses
-    function getWhiteListedAddress() external view onlyOwner returns(address[] memory) {
-        return _whiteListedAddresses;
+    function getWhiteListedCount() public view returns(uint8) {
+        return whiteListedCounter;
     }
 
     /// @dev returns the end time of purchase
-    function getEndTime() external view returns(uint256) {
+    function getEndTime() public view returns(uint256) {
         return endTime;
     }
 }
