@@ -76,7 +76,7 @@ chainId != 31337
 
       describe("Buy Ticket with a multiple address", () => {
         it("should allow address get Ticket in general sale after pre-sale is completed", async () => {
-          const numberOfAddresses = 5;
+          const numberOfAddresses = 9;
           const startingIndex = 1;
 
           for (let i = startingIndex; i < numberOfAddresses; i++) {
@@ -92,6 +92,11 @@ chainId != 31337
             const whiteListedAddresses = await DCContract.isWhiteListed(
               accounts[i].address
             );
+
+            const hasSoulBoundToken = await DCContract.hasSoulBoundToken(
+              accounts[i].address
+            );
+            console.log("has soulbound token:", hasSoulBoundToken);
             console.log("Is WhiteListedgg:", whiteListedAddresses);
           }
 

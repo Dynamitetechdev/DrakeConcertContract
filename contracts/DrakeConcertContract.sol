@@ -22,9 +22,9 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     uint256 private startTime;
     uint256 private endTime;
     uint32 private constant MAX_TICKET_SALE = 1000;
-    uint16 private constant PRESALE_MAX = 200;
+    uint16 private constant PRESALE_MAX = 4;
     uint32 private preSaleCount;
-    uint16 private constant SOULBOUND_MAX= 20;
+    uint16 private constant SOULBOUND_MAX= 3;
     uint16 private soulboundCount;
     uint256 private constant TICKET_AMOUNT = 1 ether;
     uint8 public whiteListedCounter;
@@ -32,7 +32,6 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     address private soulboundTicketAddress;
     // ======= MAPPINGS ========//
     mapping (address => bool) private whiteListed;
-    mapping (address => bool) private hasSoulBoundToken;
 
 
     // ======= EVENTS ========//
@@ -112,14 +111,17 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
         return whiteListed[_address];
     }
 
-    function hasSoulBoundToken
+
     /// @dev kills the contract purchase are done, and transfer the remaining balance to the contract owner
     function killContract() external onlyOwner {
         if(block.timestamp < endTime && totalSupply() < MAX_TICKET_SALE) revert DrakeConcertContract_saleHasNotEnded();
         selfdestruct(payable(owner()));
     }
 
-    
+    function hasSoulBoundToken(address owner) public view returns(bool){
+        return SoulboundToken(soulboundTicketAddress).isSoulbound(owner);
+    }
+
     // ======= GETTER FUNCTIONS ========//
 
     /// @dev returns all whitelisted addresses
