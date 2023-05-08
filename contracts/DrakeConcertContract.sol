@@ -22,7 +22,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     uint256 private startTime;
     uint256 private endTime;
     uint32 private constant MAX_TICKET_SALE = 1000;
-    uint16 private constant PRESALE_MAX = 4;
+    uint16 private constant PRESALE_MAX = 5;
     uint32 private preSaleCount;
     uint16 private constant SOULBOUND_MAX= 3;
     uint16 private soulboundCount;
@@ -77,7 +77,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     function whiteListAddress(address[] memory addresses) external onlyOwner{
         uint8 len = uint8(addresses.length);
 
-        if((whiteListedCounter + len) > PRESALE_MAX) revert();
+        if((whiteListedCounter + len) > PRESALE_MAX) revert("Whitelisted Has Reach its max");
 
         for (uint256 i = 0; i < addresses.length; i++) {
             if(isWhiteListed(addresses[i])) continue;
@@ -94,7 +94,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     function removeWhiteListedAddress(address[] memory addresses) external onlyOwner{
         uint8 len = uint8(addresses.length);
 
-        if(len > whiteListedCounter) revert();
+        if(len > whiteListedCounter) revert("can only remove 20 address");
 
         for(uint256 i = 0; i < addresses.length; i++){
             if(!whiteListed[addresses[i]]) continue;

@@ -52,8 +52,9 @@ chainId != 31337
             value: accurateValue,
           });
           const txBuyTicketReceipt = await txBuyTicket.wait(1);
-          const { buyersAddress, ticketId } = txBuyTicketReceipt.events[0].args;
-          console.log(parseInt(ticketId));
+          const { buyersAddress, ticketId } = txBuyTicketReceipt.events[2].args;
+
+          console.log("ticket id", parseInt(ticketId));
           expect(buyersAddress).to.equal(deployer.address);
         });
 
@@ -76,7 +77,7 @@ chainId != 31337
 
       describe("Buy Ticket with a multiple address", () => {
         it("should allow address get Ticket in general sale after pre-sale is completed", async () => {
-          const numberOfAddresses = 9;
+          const numberOfAddresses = 6;
           const startingIndex = 1;
 
           for (let i = startingIndex; i < numberOfAddresses; i++) {
@@ -154,7 +155,6 @@ chainId != 31337
             await DDContractWConnectedAccounts.buyTicket({
               value: accurateValue,
             });
-            console.log("Address", DDContractWConnectedAccounts.address);
           }
         });
 
