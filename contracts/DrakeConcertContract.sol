@@ -22,17 +22,16 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     uint256 private startTime;
     uint256 private endTime;
     uint32 private constant MAX_TICKET_SALE = 1000;
-    uint16 private constant PRESALE_MAX = 5;
+    uint16 private constant PRESALE_MAX = 200;
     uint32 private preSaleCount;
-    uint16 private constant SOULBOUND_MAX= 3;
+    uint16 private constant SOULBOUND_MAX= 20;
     uint16 private soulboundCount;
     uint256 private constant TICKET_AMOUNT = 1 ether;
     uint8 public whiteListedCounter;
 
-    address private soulboundTicketAddress;
+    SoulboundToken private sContract;
     // ======= MAPPINGS ========//
     mapping (address => bool) private whiteListed;
-
 
     // ======= EVENTS ========//
     event TicketBought(address indexed buyersAddress, uint256 indexed ticketId);
@@ -41,10 +40,10 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     /**
      * @param _startTime set the start time of the ticket sale 
      */
-    constructor(uint256 _startTime, address _soulboundTicketAddress) ERC721("DrakeConcertContract", "$DCC") {
-         soulboundTicketAddress = _soulboundTicketAddress;
-         startTime = _startTime;
-         endTime = _startTime + 10 days;
+    constructor(uint256 _startTime) ERC721("DrakeConcertContract", "$DCC") {
+        sContract = new SoulboundToken();
+        startTime = _startTime;
+        endTime = _startTime + 10 days;
     }
 
     // ======= EXETERNAL FUNCTIONS ========//
@@ -63,7 +62,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
 
         if(soulboundCount < SOULBOUND_MAX && totalSupply() < SOULBOUND_MAX){
             soulboundCount++;
-            SoulboundToken(soulboundTicketAddress).safeMint(msg.sender);
+            sContract.safeMint(msg.sender);
         }
 
         _safeMint(msg.sender, totalSupply() + 1);
@@ -103,6 +102,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
         }
     }
 
+    
     /**
      * @dev checks if an address is whitelisted or not
      * @param _address address to be checked
@@ -119,7 +119,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     }
 
     function hasSoulBoundToken(address owner) public view returns(bool){
-        return SoulboundToken(soulboundTicketAddress).isSoulbound(owner);
+        return sContract.isSoulbound(owner);
     }
 
     // ======= GETTER FUNCTIONS ========//

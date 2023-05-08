@@ -12,15 +12,37 @@ contract SoulboundToken is ERC721, Ownable {
 
     constructor() ERC721("DCCSoulboundToken", "$DST"){}
 
-    function safeMint(address to) public{
+
+    function approve(address to, uint256 tokenId) public virtual override {}
+
+    function setApprovalForAll(address operator, bool approved) public override {}
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {}
+
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {}
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public  override {}
+
+    function safeMint(address to) external onlyOwner {
         if(to == address(0)) revert();
+        if(balanceOf(to) > 0 && ownerOf(soulBoundTokenCount) == to) revert('Token cannot be minted again');
         soulBoundTokenCount++;
         _isSoulbound[to] = true;
         _safeMint(to, soulBoundTokenCount);
-    }
-
-    function _transfer(address from, address to, uint256) pure internal override{
-        if(from != address(0) && to != address(0)) revert("Token Cannot Be Transfer");
     }
 
     function isSoulbound(address owner) public view returns(bool){
