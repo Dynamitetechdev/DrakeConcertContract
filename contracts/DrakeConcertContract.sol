@@ -62,6 +62,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
 
         if(soulboundCount < SOULBOUND_MAX && totalSupply() < SOULBOUND_MAX){
             soulboundCount++;
+            sContract.grantMintAccess(msg.sender);
             sContract.safeMint(msg.sender);
         }
 

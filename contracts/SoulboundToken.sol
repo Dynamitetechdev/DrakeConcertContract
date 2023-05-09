@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract SoulboundToken is ERC721, Ownable {
     uint8 private soulBoundTokenCount;
     mapping (address => bool) private _isSoulbound;
-
+    mapping (address => bool) private mintAccess;
     constructor() ERC721("DCCSoulboundToken", "$DST"){}
 
 
@@ -39,10 +39,15 @@ contract SoulboundToken is ERC721, Ownable {
 
     function safeMint(address to) external onlyOwner {
         if(to == address(0)) revert();
+        if(!mintAccess[to]) revert("Access Denied");
         if(balanceOf(to) > 0 && ownerOf(soulBoundTokenCount) == to) revert('Token cannot be minted again');
         soulBoundTokenCount++;
         _isSoulbound[to] = true;
         _safeMint(to, soulBoundTokenCount);
+    }
+
+    function grantMintAccess(address minter) public returns(bool){
+       return mintAccess[minter] = true;
     }
 
     function isSoulbound(address owner) public view returns(bool){
