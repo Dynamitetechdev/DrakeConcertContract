@@ -13,7 +13,7 @@ module.exports = async ({ deployments, getNamedAccounts }) => {
   });
 
   if (chainId != 31337 && process.env.ETHER_SCAN_API_KEY) {
-    await verify(constructorArgs, soulboundToken.address);
+    await verify(constructorArgs, soulboundTokenContract.address);
   }
 };
 

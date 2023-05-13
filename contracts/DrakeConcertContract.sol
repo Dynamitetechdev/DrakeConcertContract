@@ -22,9 +22,9 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     uint256 private startTime;
     uint256 private endTime;
     uint32 private constant MAX_TICKET_SALE = 1000;
-    uint16 private constant PRESALE_MAX = 200;
+    uint16 private constant PRESALE_MAX = 5;
     uint16 private preSaleCount;
-    uint16 private constant SOULBOUND_MAX= 20;
+    uint16 private constant SOULBOUND_MAX= 3;
     uint16 private soulboundCount;
     uint256 private constant TICKET_AMOUNT = 1 ether;
     uint8 public whiteListedCounter;
@@ -150,13 +150,13 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
         return preSaleCount;
     }
 
-        /// @dev returns the count of each presale acquired
+    /// @dev returns the count of each presale acquired
     function getMaxSoulNBoundTicket() public view returns(uint16){
-       return SOULBOUND_MAX
+       return SOULBOUND_MAX;
     }
 
     function getMaxSoulNBoundCounter() public view returns(uint16){
-       return soulboundCount
+       return soulboundCount;
     }
 
     function getTicketPrice() public view returns(uint256){
