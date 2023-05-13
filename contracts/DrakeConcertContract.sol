@@ -150,15 +150,17 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
         return preSaleCount;
     }
 
-    /// @dev returns the count of each presale acquired
+    /// @dev returns the Maximum of soulbounds
     function getMaxSoulNBoundTicket() public view returns(uint16){
        return SOULBOUND_MAX;
     }
 
+    /// @dev returns the count of each soulbount received
     function getMaxSoulNBoundCounter() public view returns(uint16){
        return soulboundCount;
     }
 
+    /// @dev returns the amount of ticket price
     function getTicketPrice() public view returns(uint256){
         return TICKET_AMOUNT;
     }
