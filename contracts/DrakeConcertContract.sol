@@ -23,7 +23,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     uint256 private endTime;
     uint32 private constant MAX_TICKET_SALE = 1000;
     uint16 private constant PRESALE_MAX = 200;
-    uint32 private preSaleCount;
+    uint16 private preSaleCount;
     uint16 private constant SOULBOUND_MAX= 20;
     uint16 private soulboundCount;
     uint256 private constant TICKET_AMOUNT = 1 ether;
@@ -123,7 +123,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
         return sContract.isSoulbound(owner);
     }
 
-    // ======= GETTER FUNCTIONS ========//
+    // ======= GETTER FUNCTIONS ========// 
 
     /// @dev returns all whitelisted addresses
     function getWhiteListedCount() public view returns(uint8) {
@@ -133,5 +133,33 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable{
     /// @dev returns the end time of purchase
     function getEndTime() public view returns(uint256) {
         return endTime;
+    }
+
+    /// @dev returns the maximum amount of ticket that can be purchased
+    function getMaxTicketAmount() public view returns(uint32){
+        return MAX_TICKET_SALE;
+    }
+
+    /// @dev returns the maximum presale ticket sale
+    function getPresaleMaxAmount() public view returns(uint16){
+        return PRESALE_MAX;
+    }
+
+    /// @dev returns the count of each presale acquired
+    function getPreSaleCounter() public view returns(uint16){
+        return preSaleCount;
+    }
+
+        /// @dev returns the count of each presale acquired
+    function getMaxSoulNBoundTicket() public view returns(uint16){
+       return SOULBOUND_MAX
+    }
+
+    function getMaxSoulNBoundCounter() public view returns(uint16){
+       return soulboundCount
+    }
+
+    function getTicketPrice() public view returns(uint256){
+        return TICKET_AMOUNT;
     }
 }
