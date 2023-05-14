@@ -1,5 +1,9 @@
 const { network, ethers } = require("hardhat");
 const { verify } = require("../utils/verify");
+const {
+  updateABI,
+  updateContractAddresses,
+} = require("../utils/updateFrontend");
 
 module.exports = async ({ deployments, getNamedAccounts }) => {
   const chainId = network.config.chainId;
@@ -17,6 +21,12 @@ module.exports = async ({ deployments, getNamedAccounts }) => {
     log: true,
   });
 
+  if (process.env.UPLOADTOFRONTEND) {
+    console.log("Uploading to frontend");
+    await updateABI();
+    await updateContractAddresses();
+    console.log("Uploaded to frontend");
+  }
   if (chainId != 31337 && process.env.ETHER_SCAN_API_KEY) {
     await verify(constructorArgs, DCContract.address);
   }
