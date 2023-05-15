@@ -36,6 +36,7 @@ chainId != 31337
 
       describe("Buy Ticket with a single address", () => {
         beforeEach(async () => {
+          console.log("contract owner", await DCContract.getContractOwner());
           await DCContract.whiteListAddress([
             deployer.address,
             accounts[1].address,
@@ -94,6 +95,8 @@ chainId != 31337
               accounts[i].address
             );
 
+            // const getCount = await DCContract.getWhiteListedCount();
+            // console.log("count", getCount);
             const hasSoulBoundToken = await DCContract.hasSoulBoundToken(
               accounts[i].address
             );
@@ -168,9 +171,8 @@ chainId != 31337
           await network.provider.request({ method: "evm_mine", params: [] });
 
           // ============ Emulating 10 days ========== //
-          const contractBalanceBeforeKill = await ethers.provider.getBalance(
-            DCContract.address
-          );
+          const contractBalanceBeforeKill =
+            await DCContract.getContractBalance();
 
           console.log(
             "contract Balance Before Kill",
