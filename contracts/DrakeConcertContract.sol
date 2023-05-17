@@ -22,6 +22,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable {
     uint256 private startTime;
     uint256 private endTime;
     uint32 private constant MAX_TICKET_SALE = 1000;
+    uint32 private ticketSaleCount;
     uint16 private constant PRESALE_MAX = 200;
     uint16 private preSaleCount;
     uint16 private constant SOULBOUND_MAX = 20;
@@ -39,15 +40,18 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable {
         address indexed buyersAddress,
         uint256 indexed ticketId
     );
+    event endTimeEvent(uint256 _endTime);
 
     /**
      * @param _startTime set the start time of the ticket sale
      */
+
     constructor(uint256 _startTime) ERC721("DrakeConcertContract", "$DCC") {
         contractOwner = msg.sender;
         sContract = new SoulboundToken();
         startTime = _startTime;
         endTime = _startTime + 10 days;
+        emit endTimeEvent(endTime);
     }
 
     // ======= EXETERNAL FUNCTIONS ========//
@@ -76,6 +80,7 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable {
         }
 
         _safeMint(msg.sender, totalSupply() + 1);
+        ticketSaleCount++;
         emit TicketBought(msg.sender, totalSupply() + 1);
     }
 
@@ -174,6 +179,10 @@ contract DrakeConcertContract is ERC721Enumerable, Ownable {
     /// @dev returns the amount of ticket price
     function getTicketPrice() public pure returns (uint256) {
         return TICKET_AMOUNT;
+    }
+
+    function getTicketSaleCount() public view returns (uint32) {
+        return ticketSaleCount;
     }
 
     function getContractBalance() public view returns (uint256) {
